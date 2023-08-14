@@ -1,0 +1,21 @@
+{
+  "abi": [],
+  "bytecode": {
+    "object": "0x",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "linkReferences": {}
+  },
+  "ast": {
+    "absolutePath": "test/foundry/NFTRentTest.sol",
+    "id": 3538,
+    "exportedSymbols": {},
+    "nodeType": "SourceUnit",
+    "src": "4433:0:17",
+    "nodes": [],
+    "license": "UNLICENSED"
+  },
+  "id": 17
+}
