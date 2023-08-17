@@ -35,7 +35,7 @@ contract BikeRentTest is Test {
 
     function testmintNFt() public {
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",200000000000000000);
         vm.stopPrank();
         assertEq(nft_contract.ownerOf(1), owner);
         assertEq(nft_contract.totalSupply(),1);
@@ -44,15 +44,15 @@ contract BikeRentTest is Test {
      function testmintNFtZeroAddress() public {
         vm.startPrank(owner);
         vm.expectRevert("Cannot Mint to zero address");
-        nft_contract.safeMint(address(0),"abc");
+        nft_contract.safeMint(address(0),"abc",300000000000000000);
         vm.expectRevert("URI cannot be empty");
-        nft_contract.safeMint(owner,"");
+        nft_contract.safeMint(owner,"",300000000000000000);
         vm.stopPrank();
     }
 
     function testRentBikeWithList()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
@@ -63,7 +63,7 @@ contract BikeRentTest is Test {
 
     function testcannotRentWithOutListing()public{
          vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),false);
         vm.startPrank(user);
@@ -73,7 +73,7 @@ contract BikeRentTest is Test {
 
      function testcannotRentWithZeroAddress()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),false);
         vm.startPrank(user);
@@ -83,7 +83,7 @@ contract BikeRentTest is Test {
 
     function testcannotRentWithZeroTokenID()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),false);
         vm.startPrank(user);
@@ -93,7 +93,7 @@ contract BikeRentTest is Test {
 
     function testcannotRentWithZeroStartTime()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),false);
         vm.startPrank(user);
@@ -103,7 +103,7 @@ contract BikeRentTest is Test {
 
      function testRentsameBikeTwice()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
@@ -123,7 +123,7 @@ contract BikeRentTest is Test {
 
     function testrentBikeWithRetureWithZeroAddress()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
@@ -138,7 +138,7 @@ contract BikeRentTest is Test {
 
      function testrentBikeWithRetureWithZeroTokenId()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
@@ -153,7 +153,7 @@ contract BikeRentTest is Test {
 
      function testrentBikeWithRetureWithZeroEndTime()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
@@ -168,7 +168,7 @@ contract BikeRentTest is Test {
 
     function testrentBikeWithRetureWithsameTime()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
@@ -183,7 +183,7 @@ contract BikeRentTest is Test {
 
      function testrentBikeWithRetureWithstartTimegreaterthanEnd()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
@@ -197,7 +197,7 @@ contract BikeRentTest is Test {
 
     function testrentBikeWithReture()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
@@ -206,14 +206,14 @@ contract BikeRentTest is Test {
         assertEq(nft_contract.rentedNFT(1),user);
         assertEq(nft_contract.startTime(user),1692092111);
         nft_contract.returnBike{value:1 ether}(user,1692093911,1);
-        assertEq(address(owner).balance,0.5 ether);
-        assertEq(address(user).balance,1.5 ether);
+        assertEq(address(owner).balance,0.4 ether);
+        assertEq(address(user).balance,1.6 ether);
     }
     
 
     function testrentedBikeCannotBeTransfer()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         assertEq(nft_contract.nftListed(1),true);
         nft_contract.rentBike(user,1,1692092111);
@@ -225,7 +225,7 @@ contract BikeRentTest is Test {
 
     function testrentedbikeReturnCanbeTransfered() public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
         nft_contract.listNFT(1);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
@@ -234,8 +234,8 @@ contract BikeRentTest is Test {
         assertEq(nft_contract.rentedNFT(1),user);
         assertEq(nft_contract.startTime(user),1692092111);
         nft_contract.returnBike{value:1 ether}(user,1692093911,1);
-        assertEq(address(owner).balance,0.5 ether);
-        assertEq(address(user).balance,1.5 ether);
+        assertEq(address(owner).balance,0.4 ether);
+        assertEq(address(user).balance,1.6 ether);
         vm.startPrank(owner);
         nft_contract.transferFrom(owner,address(3),1);
         assertEq(nft_contract.ownerOf(1),address(3));
@@ -243,9 +243,9 @@ contract BikeRentTest is Test {
 
      function testrentBikeWithReturePriceChange()public{
         vm.startPrank(owner);
-        nft_contract.safeMint(owner,"abc");
+        nft_contract.safeMint(owner,"abc",400000000000000000);
+        nft_contract.changePrice(200000000000000000,1);
         nft_contract.listNFT(1);
-        nft_contract.changePrice(20);
         vm.stopPrank();
         assertEq(nft_contract.nftListed(1),true);
         vm.startPrank(user);
@@ -257,5 +257,71 @@ contract BikeRentTest is Test {
         assertEq(address(user).balance,1.8 ether);
     }
 
+
+    function testsellandBuy() public {
+        vm.startPrank(owner);
+        nft_contract.sellBike(owner,1000000000000000000,"abc");
+        assertEq(nft_contract.ownerOf(1),owner);
+        assertEq(nft_contract.bikePrice(1),1000000000000000000);
+        vm.stopPrank();
+        vm.startPrank(address(3));
+        vm.deal(address(3),2 ether);
+        nft_contract.buy{value:1 ether}(address(3),1);
+        assertEq(address(3).balance,1 ether);
+        assertEq(address(owner).balance,1 ether);
+        assertEq(nft_contract.ownerOf(1),address(3));
+    }
+
+    function testbuyWrongPrice() public {
+        vm.startPrank(owner);
+        nft_contract.sellBike(owner,1000000000000000000,"abc");
+        assertEq(nft_contract.ownerOf(1),owner);
+        assertEq(nft_contract.bikePrice(1),1000000000000000000);
+        vm.stopPrank();
+        vm.startPrank(address(3));
+        vm.deal(address(3),2 ether);
+        vm.expectRevert("Low Balance");
+        nft_contract.buy{value:0.5 ether}(address(3),1);
+    }
+
+     function testsellZeroAddress() public {
+        vm.startPrank(owner);
+        vm.expectRevert("Cannot Mint to zero address");
+        nft_contract.sellBike(address(0),1000000000000000000,"abc");
+        // assertEq(nft_contract.ownerOf(1),owner);
+        // assertEq(nft_contract.bikePrice(1),1000000000000000000);
+        vm.stopPrank();
+    }
+
+    function testcannotSellEmptyURI() public {
+        vm.startPrank(owner);
+        vm.expectRevert("URI cannot be empty");
+        nft_contract.sellBike(owner,1000000000000000000,"");
+        vm.stopPrank();
+    }
+
+      function testbuytwice() public {
+        vm.startPrank(owner);
+        nft_contract.sellBike(owner,1000000000000000000,"abc");
+        assertEq(nft_contract.ownerOf(1),owner);
+        assertEq(nft_contract.bikePrice(1),1000000000000000000);
+        vm.stopPrank();
+        vm.startPrank(address(3));
+        vm.deal(address(3),2 ether);
+        nft_contract.buy{value:1 ether}(address(3),1);
+        assertEq(nft_contract.ownerOf(1),address(3));
+        vm.startPrank(address(2));
+        vm.expectRevert("Bike is not for selling");
+        vm.deal(address(2),2 ether);
+        nft_contract.buy{value:1 ether}(address(2),1);
+    }
+
+     function testbuywithoutList() public {
+        vm.startPrank(address(3));
+        vm.deal(address(3),2 ether);
+        vm.expectRevert("Bike is not for selling");
+        nft_contract.buy{value:1 ether}(address(3),1);
+
+    }
   
 }
