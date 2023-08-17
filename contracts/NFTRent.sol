@@ -228,18 +228,24 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         require(sent, "Failed to send Ether");
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)internal override(ERC721, ERC721Enumerable){
+    // function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)internal override(ERC721, ERC721Enumerable){
 
-        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    //     super._beforeTokenTransfer(from, to, tokenId, batchSize);
 
-        if (rentedNFT[tokenId] != address(0)) {
-        // If rentedNFt[tokenId] is not equal to address(0), prevent the transfer.
-            require(false, "Transfer not allowed");
-            }
-        // if(sellingList[tokenId]==false){
-        //     require(false, "Transfer not allowed");
-        // }
+    //    if (rentedNFT[tokenId] != address(0) ) {
+    //     if(sellingList[tokenId] == false){
+    //         require(false, "Transfer not allowed");
+    //         }}
+    // }
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721, ERC721Enumerable) {
+    super._beforeTokenTransfer(from, to, tokenId, batchSize);
+
+    if (rentedNFT[tokenId] != address(0) && sellingList[tokenId] == false) {
+        require(false, "Transfer not allowed");
     }
+    }
+
 
 
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
