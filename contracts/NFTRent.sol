@@ -232,10 +232,13 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
 
-        if (rentedNFT[tokenId] != address(0) ) {
+        if (rentedNFT[tokenId] != address(0)) {
         // If rentedNFt[tokenId] is not equal to address(0), prevent the transfer.
             require(false, "Transfer not allowed");
             }
+        // if(sellingList[tokenId]==false){
+        //     require(false, "Transfer not allowed");
+        // }
     }
 
 

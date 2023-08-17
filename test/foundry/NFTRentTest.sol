@@ -323,5 +323,16 @@ contract BikeRentTest is Test {
         nft_contract.buy{value:1 ether}(address(3),1);
 
     }
+
+      function testFailsellButcannotbeTransferred() public {
+        vm.startPrank(owner);
+        nft_contract.sellBike(user,1000000000000000000,"abc");
+        assertEq(nft_contract.ownerOf(1),owner);
+        assertEq(nft_contract.bikePrice(1),1000000000000000000);
+        vm.stopPrank();
+        vm.startPrank(owner);
+        vm.expectRevert("Fail. Reason: ERC721: approve caller is not token owner or approved for all");
+        nft_contract.transferFrom(user,owner, 1);
+    }
   
 }
