@@ -8,8 +8,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
-
-    // uint public chargeRate =500000000000000000;
     
     using Counters for Counters.Counter;
 
@@ -17,9 +15,7 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     constructor() ERC721("MyToken", "MTK")
     {
-
     }
-    
     //chargeRate mapping for different Bikes
     mapping(uint256=>uint256) public chargeRate;
 
@@ -44,28 +40,53 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     //is listedFor selling
     mapping(uint256=>bool) public sellingList;
 
+
+    /*
+     * @notice Enables to list nft(bike) for selling (Minting at the new token)
+     * @param to address where NFT needs to mint
+     * @param priceinwei price of the nft(bike) in eth(wei).
+     * @param uri data related to nft.
+     * 
+     * Owner mints nft and list it for selling with price.
+     * Function should be perform by owner only.
+    */
     function sellBike(address to, uint256 priceinwei, string memory uri) public onlyOwner {
-    require(to != address(0), "Cannot Mint to zero address");
-    require(bytes(uri).length > 0, "URI cannot be empty"); 
+        //check if address is not zero address
+        require(to != address(0), "Cannot Mint to zero address");
+        //check if uri is not empty
+        require(bytes(uri).length > 0, "URI cannot be empty"); 
+        //incrementing id
+        _tokenIdCounter.increment();
+        //stroing current id
+        uint256 tokenId = _tokenIdCounter.current();
+        //minting to address with that store id
+        _safeMint(to, tokenId);
+        //setting uri for the tokenId
+        _setTokenURI(tokenId, uri);
 
-    _tokenIdCounter.increment();
-    uint256 tokenId = _tokenIdCounter.current();
-    _safeMint(to, tokenId);
-    _setTokenURI(tokenId, uri);
-
-    ownerAddress[tokenId] = to;
-    // bikePrice[tokenId] = (pricepercentage * 1e18) / 100;
-    bikePrice[tokenId] = priceinwei;
-    sellingList[tokenId] = true;
-    // Set approval for the contract to manage all tokens owned by 'to'
-    approve(address(this), tokenId);
+        ownerAddress[tokenId] = to;
+        // bikePrice[tokenId] = (pricepercentage * 1e18) / 100;
+        bikePrice[tokenId] = priceinwei;
+        sellingList[tokenId] = true;
+        // Set approval for the contract to manage all tokens owned by 'to'
+        approve(address(this), tokenId);
     }
 
-
+    /*
+     * @notice Enables to buy nft(bike) with price.
+     * @param to address where NFT needs to transfer
+     * @param tokenId nftId you need to buy.
+     * 
+     * @function payable needs to pay ethers
+     * 
+     * Function should be perform by anyone can call this function and buys nft and it will remove listing
+     * and update owner of nft.
+    */
     function buy(address to,uint256 tokenId) public payable {
-
+        //check if tokenid is listed for selling
        require(sellingList[tokenId]==true,"Bike is not for selling");
 
+        //check if msg.value is greater than the price of nft
        require(msg.value>=bikePrice[tokenId],"Low Balance");
 
         // Calculate remaining amount after deducting charges
@@ -94,6 +115,14 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         payable(msg.sender).transfer(refundAmount);
     }
 
+    /*
+     * @notice Enables to Mint new nft(bike) with price and URI.
+     * @param to address where NFT needs to mint
+     * @param uri data related to nft.
+     * @param priceinwei price of the nft(bike) in eth(wei) for perthirty minute charge on renting.
+     * 
+     * Function should be perform by onlyOwner.
+    */
     //Minting bike only owner
     function safeMint(address to, string memory uri,uint256 priceinwei) public onlyOwner {
         
@@ -112,7 +141,13 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         chargeRate[tokenId]=priceinwei;
     }
     
-    function listNFT(uint256 tokenId)public{
+     /*
+     * @notice Enables to list the minted NFT for Renting
+     * @param tokenId list the specific tokenId.
+     * 
+     * Function can be call by onlyOwner.
+    */
+    function listNFT(uint256 tokenId)public onlyOwner{
         //check if the sender has the same token ownership
         require(msg.sender==ownerOf(tokenId),"You dont have that NFT token!");
         //list nft for the Rent
@@ -120,39 +155,69 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
 
-    function changePrice(uint256 priceinwei,uint256 tokenId) public  returns (uint256) {
+     /*
+     * @notice Enables to change price for renting bikes charges.
+     * @param priceinwei to set new price.
+     * @param tokenId to get the specific tokenId.
+     * 
+     * Function can be call by onlyOwner.
+    */
+    function changePrice(uint256 priceinwei,uint256 tokenId) public onlyOwner returns (uint256) {
         require(ownerOf(tokenId)==msg.sender,"You are not the owner of the Bike");
         // require(percentage >= 0 && percentage <= 100, "Percentage out of range");
         // Convert the percentage to a decimal value
         uint256 decimalValue = priceinwei;
-        
+        //updating mapping
         chargeRate[tokenId]=decimalValue;
 
         return decimalValue;
     }
 
+    /*
+     * @notice Enables to rent bike for price on per thirty minute.
+     * @param walletAdress user address.
+     * @param tokenId to get the specific tokenId.
+     * @param starttime unix time stamp for starttime.
+     * 
+     * Function can be call by anyone.
+    */
     function rentBike(address walletAddress,uint256 tokenId,uint64 starttime)public{
+        //check if address is not a zero address
         require(walletAddress!=address(0),"Cannot Rent to zero Address");
+        //check if tokenId is not zero 
         require(tokenId!=0,"Bike doesnot Existed");
+        //check for start time is not set to zero
         require(starttime!=0,"Start time cannot be zero");
         //Check If NFT is listed for the Rent
         require(nftListed[tokenId]==true,"You cannot rent the bike");
+        //check if no one else has rented that nft
         require(rentedNFT[tokenId]==address(0),"You cannot rent this bike already Rented");
+        //check if user have other active ride
         require(activeRide[walletAddress]==false,"You already have the Bike Rented");
-        // require(renters[walletAddress].due==0,"Pay Your Dues before Renting");
         //Set Active ride after renting a bike
         activeRide[walletAddress]=true;
        //set starting time for the ride
         startTime[walletAddress]=starttime;
-        // canRent[walletAddress]=false;
         //set NFT for rent to keep them from transfering
         rentedNFT[tokenId]=walletAddress;
     }
     
-
+     /*
+     * @notice Enables to return the rented bike for price on per thirty minute charges.
+     * @param walletAdress user address.
+     * @param tokenId to get the specific tokenId.
+     * @param endtime unix time stamp for endtime ride.
+     * 
+     * @function payable needs to pay ether
+     * 
+     * Function can be call by anyone.
+    */
     function returnBike(address walletAddress, uint64 endtime,uint256 tokenId) public payable {
+        //check if wallet is not a zero address
         require(walletAddress!=address(0),"Cannot Rent to zero Address");
+        //check if tokenId is not a zero address
         require(tokenId!=0,"Bike doesnot Existed");
+        //check if endtime isnot a zero address
         require(endtime!=0,"End time cannot be zero");
         //check if already have an active Ride
         require(activeRide[walletAddress] == true, "You haven't rented a bike");
@@ -187,6 +252,16 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         payable(msg.sender).transfer(refundAmount);
     }
 
+     /*
+     * @notice Enables to calculate charges for rented Bikes.
+     * @param walletAdress user address.
+     * @param tokenId to get the specific tokenId.
+     * @param endtime unix time stamp for endtime.
+     * 
+     * @require needs to have active ride else it won't calculate
+     * 
+     * Function can be call by anyone.
+    */
 
     function calculateCharges(address walletAddress, uint64 endtime,uint256 tokenId) public view returns (uint256) {
         //If active Ride then calculate charges
@@ -206,12 +281,21 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         return thirtyMinuteCharge;
     }
 
-    
+     /*
+     * @notice Enables to check balance of the contract.
+     * 
+     * Function can be call by onlyOwner.
+    */
     //get contract balance 
-    function balanceof() view public returns(uint){
+    function balanceof() view public onlyOwner returns(uint){
         //return the contract balance
         return address(this).balance;
-    }
+    }   
+     /*
+     * @notice Enables to withdraw funds from the contract.
+     * 
+     * Function can be call by onlyOwner.
+    */
 
     //withdraw any amount from the contract
     function withdraw() public onlyOwner { 
@@ -228,32 +312,42 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         require(sent, "Failed to send Ether");
     }
 
-    // function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)internal override(ERC721, ERC721Enumerable){
-
-    //     super._beforeTokenTransfer(from, to, tokenId, batchSize);
-
-    //    if (rentedNFT[tokenId] != address(0) ) {
-    //     if(sellingList[tokenId] == false){
-    //         require(false, "Transfer not allowed");
-    //         }}
-    // }
+    /*
+     * @notice Enables to check token(NFT) transfer before the trancation is processed.
+     * @param from owner address
+     * @param to where to transfer
+     * @param tokenId specific tokenId
+     * 
+     * @calls automatically runs for each transfer
+     * 
+     * @require nft is not listed in selling bike or not rented 
+     * if both are false then it will allow transfer
+     * 
+     * Function can be call by anyone.
+    */
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721, ERC721Enumerable) {
-    super._beforeTokenTransfer(from, to, tokenId, batchSize);
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
 
-    if (rentedNFT[tokenId] != address(0) && sellingList[tokenId] == false) {
-        require(false, "Transfer not allowed");
+        if (rentedNFT[tokenId] != address(0) && sellingList[tokenId] == false) {
+            require(false, "Transfer not allowed");
+        }
     }
-    }
 
 
-
+     /*
+     * @notice just an override function required to use ERC721URI storage 
+     * 
+    */
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
     
     }
 
-
+     /*
+     * @notice just an override function required to use ERC721URI storage 
+     * 
+    */
     function tokenURI(uint256 tokenId)
         public
         view
@@ -263,6 +357,11 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         return super.tokenURI(tokenId);
     }
 
+
+     /*
+     * @notice just an override function required to use ERC721Enumerable 
+     * 
+    */
     function supportsInterface(bytes4 interfaceId)
         public
         view

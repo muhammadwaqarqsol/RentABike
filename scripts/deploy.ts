@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 
 async function main() {
 
-  const Contract = await ethers.getContractFactory("MyToken");
+  const Contract = await ethers.getContractFactory("Rentabike");
   const contract = await Contract.deploy();
 
   await contract.deployed();
