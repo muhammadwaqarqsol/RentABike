@@ -315,7 +315,7 @@ contract BikeRentTest is Test {
         //check if start time for a user is correct
         assertEq(nft_contract.startTime(user),1692092111);
         //revert if and end time are same
-        vm.expectRevert("Start and End Time Cannot same");
+        vm.expectRevert("Start and End Time Cannot be the same");
         //return bike with same time as start time
         nft_contract.returnBike{value:1 ether}(user,1692092111,1);
         //check if user balance is same and is not charged
@@ -371,9 +371,9 @@ contract BikeRentTest is Test {
         //return bike with payment
         nft_contract.returnBike{value:1 ether}(user,1692093911,1);
         //check if owner recieves amount
-        assertEq(address(owner).balance,0.4 ether);
+        assertEq(address(owner).balance,0.40006 ether);
         //check if user balance is decreased and correctly charged
-        assertEq(address(user).balance,1.6 ether);
+        assertEq(address(user).balance,1.59994 ether);
     }
     
     //test for bike cannot be transfer when rented
@@ -421,9 +421,9 @@ contract BikeRentTest is Test {
         //return bike with payment
         nft_contract.returnBike{value:1 ether}(user,1692093911,1);
         //check if owner balance is increased 
-        assertEq(address(owner).balance,0.4 ether);
+        assertEq(address(owner).balance,0.40006 ether);
         //check is user balance is decreased. 
-        assertEq(address(user).balance,1.6 ether);
+        assertEq(address(user).balance,1.59994 ether);
         //start interaction as owner
         vm.startPrank(owner);
         //trasferring nft to address 3
@@ -457,9 +457,9 @@ contract BikeRentTest is Test {
         //return bike with payment
         nft_contract.returnBike{value:1 ether}(user,1692093911,1);
         //check if owner recieved the amount
-        assertEq(address(owner).balance,0.2 ether);
+        assertEq(address(owner).balance,0.20006 ether);
         //check if user balance is deducted correctly
-        assertEq(address(user).balance,1.8 ether);
+        assertEq(address(user).balance,1.79994 ether);
     }
 
     //test for buy and sell nft 
@@ -593,5 +593,34 @@ contract BikeRentTest is Test {
         //transfering nft token listed for selling
         nft_contract.transferFrom(user,owner, 1);
     }
+
+     //test for bike nft return with sell and return 
+    function testrentBikeWithReture_compensationamount()public{
+        //start interaction as owner
+        vm.startPrank(owner);
+        //mint nft for rent
+        nft_contract.safeMint(owner,"abc",400000000000000000);
+        //list nft for rent
+        nft_contract.listNFT(1);
+        //stop interaction
+        vm.stopPrank();
+        //check if nft is listed for rent
+        assertEq(nft_contract.nftListed(1),true);
+        //start interaction as user
+        vm.startPrank(user);
+        //rent nft as user
+        nft_contract.rentBike(user,1,1692092111);
+        //check if nft is rented by the user 
+        assertEq(nft_contract.rentedNFT(1),user);
+        //check if start time is correct
+        assertEq(nft_contract.startTime(user),1692092111);
+        //return bike with payment
+        nft_contract.returnBike{value:1 ether}(user,1692094271,1);
+        //check if owner recieves amount
+        assertEq(address(owner).balance,0.40006 ether);
+        // //check if user balance is decreased and correctly charged
+        assertEq(address(user).balance,1.59994 ether);
+    }
+    
   
 }

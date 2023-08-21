@@ -13,11 +13,16 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     Counters.Counter private _tokenIdCounter;
 
+    uint public compensationamount=10000000000000;
+
     constructor() ERC721("MyToken", "MTK")
     {
     }
     //chargeRate mapping for different Bikes
     mapping(uint256=>uint256) public chargeRate;
+
+     //mapping to charge amount for user;
+    mapping(address=>uint256) public amounttoCharge;
 
     //Mapping for keeping userride active when rented otherwise false
     mapping(address=>bool) public activeRide;
@@ -70,6 +75,25 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         sellingList[tokenId] = true;
         // Set approval for the contract to manage all tokens owned by 'to'
         approve(address(this), tokenId);
+    }
+
+    /*
+     * @notice Enables to view compensation amount.
+     * 
+     * Function should be perform by owner only.
+    */
+    function getCompensationamount() public view onlyOwner returns(uint256){
+        return compensationamount;
+    }
+
+    /*
+     * @notice Enables to update compensation amount 
+     * @param uint256 priceinwei update price of compensation
+     * 
+     * Function should be perform by owner only.
+    */
+    function updateCompensation(uint256 priceinwei)public onlyOwner{
+        compensationamount=priceinwei;
     }
 
     /*
@@ -181,7 +205,7 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * 
      * Function can be call by anyone.
     */
-    function rentBike(address walletAddress,uint256 tokenId,uint64 starttime)public{
+    function rentBike(address walletAddress,uint256 tokenId,uint64 starttime) public {
         //check if address is not a zero address
         require(walletAddress!=address(0),"Cannot Rent to zero Address");
         //check if tokenId is not zero 
@@ -200,6 +224,8 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         startTime[walletAddress]=starttime;
         //set NFT for rent to keep them from transfering
         rentedNFT[tokenId]=walletAddress;
+        //charge amount first time when pick
+        amounttoCharge[walletAddress]=chargeRate[tokenId];
     }
     
      /*
@@ -263,22 +289,32 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * Function can be call by anyone.
     */
 
-    function calculateCharges(address walletAddress, uint64 endtime,uint256 tokenId) public view returns (uint256) {
+    function calculateCharges(address walletAddress, uint64 endtime,uint256 tokenId) public returns (uint256) {
         //If active Ride then calculate charges
         require(activeRide[walletAddress] == true, "You have not rented any bike");
         //check the starting time for the Ride
         uint256 starttime = startTime[walletAddress];
         //startime and Endtime cannot be same
-        require(endtime!=starttime,"Start and End Time Cannot same");
+        require(endtime!=starttime,"Start and End Time Cannot be the same");
         require(starttime < endtime, "Start time must be less than end time");
         //calculate time difference from start and end
         uint256 calculateTimeInBetween = endtime - starttime;
         //calculate time in minutes  
         uint256 timeSpanInMinutes = calculateTimeInBetween / 60;
-        //calculate time increment 30 minutes with perthirty minute .5 eth charges  
-        uint256 thirtyMinuteCharge = (timeSpanInMinutes / 30) * chargeRate[tokenId]; // Charging 0.5 ETH per 30 minutes
-        //return the charge amount
-        return thirtyMinuteCharge;
+        //calculate time increment 30 minutes with perthirty minute  
+         uint256 timeSpanPerthirty = timeSpanInMinutes / 30;
+        //if time is less than thirty one time charge
+        if (timeSpanPerthirty == 0) {
+            uint256 chargeAmount = amounttoCharge[walletAddress];
+            return chargeAmount;
+        }
+        //else if greater than 30 then setting one time charge to zero
+        amounttoCharge[walletAddress] = 0;
+        //calculate perthirty minute with extra compensation per 5 minute extra 0.0001 eth
+        uint256 compensation = ((timeSpanPerthirty * 30) / 5) * compensationamount;
+        //total charge perthirty minute + compensation
+        uint256 totalCharge = (timeSpanPerthirty * chargeRate[tokenId]) + compensation;
+        return totalCharge;
     }
 
      /*
@@ -348,12 +384,7 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * @notice just an override function required to use ERC721URI storage 
      * 
     */
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
-    {
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage)returns (string memory){
         return super.tokenURI(tokenId);
     }
 
@@ -362,12 +393,7 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * @notice just an override function required to use ERC721Enumerable 
      * 
     */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, ERC721Enumerable)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId)public view override(ERC721, ERC721Enumerable)returns (bool){
         return super.supportsInterface(interfaceId);
     }
 }
