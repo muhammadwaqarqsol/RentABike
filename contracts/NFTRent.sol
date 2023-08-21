@@ -13,7 +13,7 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     Counters.Counter private _tokenIdCounter;
 
-    uint public compensationamount=10000000000000;
+    uint public compensationamount=100000000000000000;
 
     constructor() ERC721("MyToken", "MTK")
     {
@@ -289,30 +289,22 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * Function can be call by anyone.
     */
 
-    function calculateCharges(address walletAddress, uint64 endtime,uint256 tokenId) public returns (uint256) {
-        //If active Ride then calculate charges
+    function calculateCharges(address walletAddress, uint64 endtime, uint256 tokenId) public returns (uint256) {
         require(activeRide[walletAddress] == true, "You have not rented any bike");
-        //check the starting time for the Ride
         uint256 starttime = startTime[walletAddress];
-        //startime and Endtime cannot be same
-        require(endtime!=starttime,"Start and End Time Cannot be the same");
+        require(endtime != starttime, "Start and End Time Cannot be the same");
         require(starttime < endtime, "Start time must be less than end time");
-        //calculate time difference from start and end
         uint256 calculateTimeInBetween = endtime - starttime;
-        //calculate time in minutes  
         uint256 timeSpanInMinutes = calculateTimeInBetween / 60;
-        //calculate time increment 30 minutes with perthirty minute  
-         uint256 timeSpanPerthirty = timeSpanInMinutes / 30;
-        //if time is less than thirty one time charge
+        uint256 timeSpanPerthirty = timeSpanInMinutes / 30;
+
         if (timeSpanPerthirty == 0) {
             uint256 chargeAmount = amounttoCharge[walletAddress];
             return chargeAmount;
         }
-        //else if greater than 30 then setting one time charge to zero
+
         amounttoCharge[walletAddress] = 0;
-        //calculate perthirty minute with extra compensation per 5 minute extra 0.0001 eth
-        uint256 compensation = ((timeSpanPerthirty * 30) / 5) * compensationamount;
-        //total charge perthirty minute + compensation
+        uint256 compensation = ((timeSpanInMinutes % 30) / 5) * compensationamount;
         uint256 totalCharge = (timeSpanPerthirty * chargeRate[tokenId]) + compensation;
         return totalCharge;
     }
