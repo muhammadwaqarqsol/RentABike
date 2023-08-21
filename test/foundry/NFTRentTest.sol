@@ -47,7 +47,7 @@ contract BikeRentTest is Test {
         //starting owner as initiater
         vm.startPrank(owner);
         //mint nft with price
-        nft_contract.safeMint(owner,"abc",200000000000000000);
+        nft_contract.safeMint(owner,"abc");
         //interaction stop
         vm.stopPrank();
         //check if owner is correct
@@ -63,11 +63,11 @@ contract BikeRentTest is Test {
         //reverting become address is zero
         vm.expectRevert("Cannot Mint to zero address");
         //call with zero address to be reverted
-        nft_contract.safeMint(address(0),"abc",300000000000000000);
+        nft_contract.safeMint(address(0),"abc");
         //call to be reverted if URI is empty
         vm.expectRevert("URI cannot be empty");
         //calls with Empty URI
-        nft_contract.safeMint(owner,"",300000000000000000);
+        nft_contract.safeMint(owner,"");
          //interaction stop
         vm.stopPrank();
     }
@@ -77,17 +77,17 @@ contract BikeRentTest is Test {
         //starting owner as initiater
         vm.startPrank(owner);
         //mint nft with price
-        nft_contract.safeMint(owner,"abc",400000000000000000);
+        nft_contract.safeMint(owner,"abc");
         //list the NFT for renting
-        nft_contract.listNFT(1);
+        nft_contract.listForRent(owner,1,400000000000000000);
         //interaction stop
         vm.stopPrank();
         //check is nft is listed for rent
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //interaction start as user to rent
         vm.startPrank(user);
         //call to rent nft
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //check if nft is rented by the same user address
         assert(nft_contract.rentedNFT(1)==user);
     }
@@ -97,17 +97,17 @@ contract BikeRentTest is Test {
         //start interaction
          vm.startPrank(owner);
         //mint the nft with price
-        nft_contract.safeMint(owner,"abc",400000000000000000);
+        nft_contract.safeMint(owner,"abc");
         //stop interaction
         vm.stopPrank();
         //check if nft is not list
-        assertEq(nft_contract.nftListed(1),false);
+        assertEq(nft_contract.nftForRent(1),false);
          //interaction start as user to rent
         vm.startPrank(user);
         //nft not list to be reverted
         vm.expectRevert("You cannot rent the bike");
         //calling rentBike without listed TokenId
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
     }
 
     //test for minted nft but not listed for rent to check if they can be rented
@@ -115,9 +115,9 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //mint the nft with price
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //list the NFT for renting
-        nft_contract.listNFT(1);
+        nft_contract.safeMint(owner,"abc");
+       //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //ineraction stops
         vm.stopPrank();
         //interaction start as user to rent
@@ -125,7 +125,7 @@ contract BikeRentTest is Test {
         //to be reverted with zero address
         vm.expectRevert("Cannot Rent to zero Address");
         //calls rent with zero address
-        nft_contract.rentBike(address(0),1,1692092111);
+        nft_contract.rentaBike(address(0),1,1692092111);
     }
 
     //test cannot rent the zero tokenId
@@ -133,9 +133,9 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //mint the nft with price
-        nft_contract.safeMint(owner,"abc",400000000000000000);
+        nft_contract.safeMint(owner,"abc");
         //list the NFT for renting
-        nft_contract.listNFT(1);
+        nft_contract.listForRent(owner,1,400000000000000000);
         //ineraction stops
         vm.stopPrank();
         //interaction start as user to rent
@@ -143,7 +143,7 @@ contract BikeRentTest is Test {
         //to be reverted with zero tokenId
         vm.expectRevert("Bike doesnot Existed");
          //calls rent with zero tokenId
-        nft_contract.rentBike(user,0,1692092111);
+        nft_contract.rentaBike(user,0,1692092111);
     }
 
     //test cannot rent with start time as zero
@@ -151,9 +151,9 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //mint the nft with price
-        nft_contract.safeMint(owner,"abc",400000000000000000);
+        nft_contract.safeMint(owner,"abc");
         //list the NFT for renting
-        nft_contract.listNFT(1);
+        nft_contract.listForRent(owner,1,400000000000000000);
         //ineraction stops
         vm.stopPrank();
         //interaction start as user to rent
@@ -161,7 +161,7 @@ contract BikeRentTest is Test {
         //to be reverted with zero starttime
         vm.expectRevert("Start time cannot be zero");
           //calls rent with zero starttime
-        nft_contract.rentBike(user,1,0);
+        nft_contract.rentaBike(user,1,0);
     }
 
     //test for renting same bike twice 
@@ -170,22 +170,22 @@ contract BikeRentTest is Test {
         vm.startPrank(owner);
         
         //mint nft to the owner
-        nft_contract.safeMint(owner,"abc",400000000000000000);
+        nft_contract.safeMint(owner,"abc");
         
-        //list nft for rent
-        nft_contract.listNFT(1);
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         
         //stop interaction as owner
         vm.stopPrank();
 
         //check if nft is rented for the the 
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         
         //interaction to set as user
         vm.startPrank(user);
 
         //rent a listed bike by user
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
 
         //check if user has rented the bike
         assertEq(nft_contract.rentedNFT(1),user);
@@ -197,7 +197,7 @@ contract BikeRentTest is Test {
         vm.expectRevert("You cannot rent this bike already Rented");
 
         //nft contract address 3 is calling rent on rented Bike
-        nft_contract.rentBike(address(3),1,1692092111);
+        nft_contract.rentaBike(address(3),1,1692092111);
     }
 
     //test for return without rent or active ride
@@ -207,7 +207,7 @@ contract BikeRentTest is Test {
         //expected revert without rent
         vm.expectRevert("You haven't rented a bike");
         //contract call to return bike without rent
-        nft_contract.returnBike{value:1 ether}(user,1692093911,1);
+        nft_contract.returnaBike{value:1 ether}(user,1692093911,1);
     }
 
     //test for return bike with zero address
@@ -215,17 +215,17 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //start minting nft and setting price
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //listing nft for rent
-        nft_contract.listNFT(1);
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting  
+        nft_contract.listForRent(owner,1,400000000000000000);
         //interation stop
         vm.stopPrank();
         //check if nft is listed for rent
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //start interaction as user
         vm.startPrank(user);
         //rent a bike
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //check if bike is rented by the same user
         assertEq(nft_contract.rentedNFT(1),user);
         //check if start address is same as user
@@ -233,7 +233,7 @@ contract BikeRentTest is Test {
         //expected revert for zero address
         vm.expectRevert("Cannot Rent to zero Address");
         //return bike with zero address
-        nft_contract.returnBike{value:1 ether}(address(0),1692093911,1);
+        nft_contract.returnaBike{value:1 ether}(address(0),1692093911,1);
         //check if balance is intact
         assertEq(address(user).balance,2 ether);
     }
@@ -243,17 +243,17 @@ contract BikeRentTest is Test {
         //starting to interact as owner
         vm.startPrank(owner);
         //start minting nft and setting price
-        nft_contract.safeMint(owner,"abc",400000000000000000);
+        nft_contract.safeMint(owner,"abc");
         //listing nft for rent
-        nft_contract.listNFT(1);
+        nft_contract.listForRent(owner,1,400000000000000000);
         //interation stop
         vm.stopPrank();
         //Check if nft is listed for the rent
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
          //starting to interact as user
         vm.startPrank(user);
         //calling rent Function
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //checkif nft is rented by the same user 
         assertEq(nft_contract.rentedNFT(1),user);
         //check if start time is same or not
@@ -261,7 +261,7 @@ contract BikeRentTest is Test {
         //revert the Bike does not exist when returning 0 tokenId
         vm.expectRevert("Bike doesnot Existed");
         //return bike call for nft to be reverted
-        nft_contract.returnBike{value:1 ether}(user,1692093911,0);
+        nft_contract.returnaBike{value:1 ether}(user,1692093911,0);
         //check if the balance is intact and is not being used.
         assertEq(address(user).balance,2 ether);
     }
@@ -271,17 +271,17 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //mint nft for rent
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //list nft for rent
-        nft_contract.listNFT(1);
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //stops interaction as owner
         vm.stopPrank();
         //check if nft is listed for rent
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //start interaction as user
         vm.startPrank(user);
         //rent a bike as user
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //check if bike is rented by correct user
         assertEq(nft_contract.rentedNFT(1),user);
         //check if start time is correct
@@ -289,7 +289,7 @@ contract BikeRentTest is Test {
         //revert if end time is zero 
         vm.expectRevert("End time cannot be zero");
         //return bike with payment but zero end time
-        nft_contract.returnBike{value:1 ether}(user,0,1);
+        nft_contract.returnaBike{value:1 ether}(user,0,1);
         //check if user balance is intact
         assertEq(address(user).balance,2 ether);
     }
@@ -299,17 +299,17 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //mint nft for rent
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //list nft 
-        nft_contract.listNFT(1);
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //stops interaction
         vm.stopPrank();
         //check if nft is listed or not
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //interaction as user
         vm.startPrank(user);
         //rent a bike as user
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //check if nft is rented by user or not
         assertEq(nft_contract.rentedNFT(1),user);
         //check if start time for a user is correct
@@ -317,7 +317,7 @@ contract BikeRentTest is Test {
         //revert if and end time are same
         vm.expectRevert("Start and End Time Cannot be the same");
         //return bike with same time as start time
-        nft_contract.returnBike{value:1 ether}(user,1692092111,1);
+        nft_contract.returnaBike{value:1 ether}(user,1692092111,1);
         //check if user balance is same and is not charged
         assertEq(address(user).balance,2 ether);
     }
@@ -327,23 +327,23 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //mint nft for rent
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //list the nft
-        nft_contract.listNFT(1);
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //stopping interaction
         vm.stopPrank();
         //check if nft is listed or not
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //starting interaction as user
         vm.startPrank(user);
         //rent a bike as user
-        nft_contract.rentBike(user,1,1692092113);
+        nft_contract.rentaBike(user,1,1692092113);
         //check if bike is rented by user or not
         assertEq(nft_contract.rentedNFT(1),user);
         //revert if time is mismatched and less than
         vm.expectRevert("Start time must be less than end time");
         //nft return with start time greature than end time
-        nft_contract.returnBike{value:1 ether}(user,1692092111,1);
+        nft_contract.returnaBike{value:1 ether}(user,1692092111,1);
         //check if user balance is same and is not charged
         assertEq(address(user).balance,2 ether);
     }
@@ -353,23 +353,23 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //mint nft for rent
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //list nft for rent
-        nft_contract.listNFT(1);
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //stop interaction
         vm.stopPrank();
         //check if nft is listed for rent
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //start interaction as user
         vm.startPrank(user);
         //rent nft as user
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //check if nft is rented by the user 
         assertEq(nft_contract.rentedNFT(1),user);
         //check if start time is correct
         assertEq(nft_contract.startTime(user),1692092111);
         //return bike with payment
-        nft_contract.returnBike{value:1 ether}(user,1692093911,1);
+        nft_contract.returnaBike{value:1 ether}(user,1692093911,1);
         //check if owner recieves amount
         assertEq(address(owner).balance,0.4 ether);
         //check if user balance is decreased and correctly charged
@@ -381,13 +381,13 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //mint nft for rent
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //list nft for rent
-        nft_contract.listNFT(1);
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //check if nft is listed or not
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //rent bike as user
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //check if bike renter is user
         assertEq(nft_contract.rentedNFT(1),user);
         //check if start time is correct
@@ -403,23 +403,23 @@ contract BikeRentTest is Test {
         //starting interaction as owner
         vm.startPrank(owner);
         //created nft for rent
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //list nft for rent
-        nft_contract.listNFT(1);
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //stopping interaction
         vm.stopPrank();
         //check if nft is listed or not
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //start interaction as user
         vm.startPrank(user);
         //rent a bike as user
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //check if bike is rented by correct user
         assertEq(nft_contract.rentedNFT(1),user);
         //check if start time is correct or not
         assertEq(nft_contract.startTime(user),1692092111);
         //return bike with payment
-        nft_contract.returnBike{value:1 ether}(user,1692093911,1);
+        nft_contract.returnaBike{value:1 ether}(user,1692093911,1);
         //check if owner balance is increased 
         assertEq(address(owner).balance,0.4 ether);
         //check is user balance is decreased. 
@@ -437,25 +437,25 @@ contract BikeRentTest is Test {
         //start interaction as owner
         vm.startPrank(owner);
         //minting nft 
-        nft_contract.safeMint(owner,"abc",400000000000000000);
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //changing price after nft mint
-        nft_contract.changePrice(200000000000000000,1);
-        //listing nft
-        nft_contract.listNFT(1);
+        nft_contract.changeRentPrice(200000000000000000,1);
         //stopping interaction
         vm.stopPrank();
         //check if nft is listed for rent
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //start interaction as user
         vm.startPrank(user);
         //rent a bike
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //check if bike is rented to user 
         assertEq(nft_contract.rentedNFT(1),user);
         //check if starting time is correct or not
         assertEq(nft_contract.startTime(user),1692092111);
         //return bike with payment
-        nft_contract.returnBike{value:1 ether}(user,1692093911,1);
+        nft_contract.returnaBike{value:1 ether}(user,1692093911,1);
         //check if owner recieved the amount
         assertEq(address(owner).balance,0.2 ether);
         //check if user balance is deducted correctly
@@ -466,8 +466,10 @@ contract BikeRentTest is Test {
     function testsellandBuy() public {
         //start interaction as owner
         vm.startPrank(owner);
+        //minting nft 
+        nft_contract.safeMint(owner,"abc");
         //minting nft for selling bike
-        nft_contract.sellBike(owner,1000000000000000000,"abc");
+        nft_contract.displayBikeForSale(owner,1,1000000000000000000);
         //check if owner is correct of nft or nor
         assertEq(nft_contract.ownerOf(1),owner);
         //check if bike price is correct 
@@ -479,7 +481,7 @@ contract BikeRentTest is Test {
         //giving 2 ether to address 3
         vm.deal(address(3),2 ether);
         //buying nft 
-        nft_contract.buy{value:1 ether}(address(3),1);
+        nft_contract.buyBike{value:1 ether}(address(3),1);
         //check if user beller is deducted
         assertEq(address(3).balance,1 ether);
         //check if owner balance of seller is incremented
@@ -492,8 +494,10 @@ contract BikeRentTest is Test {
     function testbuyWrongPrice() public {
         //start interaction as owner
         vm.startPrank(owner);
-        //selling bike nft to be minted
-        nft_contract.sellBike(owner,1000000000000000000,"abc");
+        //minting nft 
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //check if owner is correct after the mint
         assertEq(nft_contract.ownerOf(1),owner);
         //check if the bike price is correct
@@ -507,17 +511,19 @@ contract BikeRentTest is Test {
         //worng price to be reverted
         vm.expectRevert("Low Balance");
         //buying at low price than original
-        nft_contract.buy{value:0.5 ether}(address(3),1);
+        nft_contract.buyBike{value:0.3 ether}(address(3),1);
     }
 
     //test for minting nft with zero address(Selling)
      function testsellZeroAddress() public {
         //starting interaction as owner
         vm.startPrank(owner);
+        //minting nft 
+        nft_contract.safeMint(owner,"abc");
         //expect revert with zero address sell mint
-        vm.expectRevert("Cannot Mint to zero address");
-        //call sell but address zero to mint
-        nft_contract.sellBike(address(0),1000000000000000000,"abc");
+        vm.expectRevert("cannot give zero address");
+        //list the NFT for renting
+        nft_contract.listForRent(address(0),1,400000000000000000);
         //stoping interaction
         vm.stopPrank();
     }
@@ -529,7 +535,7 @@ contract BikeRentTest is Test {
         //Empty uri revert Function
         vm.expectRevert("URI cannot be empty");
         //create bike nft with empty uri
-        nft_contract.sellBike(owner,1000000000000000000,"");
+        nft_contract.safeMint(owner,"");
         //stopping interaction
         vm.stopPrank();
     }
@@ -538,8 +544,10 @@ contract BikeRentTest is Test {
     function testbuytwice() public {
         //start interaction as owner
         vm.startPrank(owner);
-        //creating nft for selling bike
-        nft_contract.sellBike(owner,1000000000000000000,"abc");
+        //minting nft 
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //check if owner is correct
         assertEq(nft_contract.ownerOf(1),owner);
         //check if price is correct
@@ -551,7 +559,7 @@ contract BikeRentTest is Test {
         //give 2 ether to address(3)
         vm.deal(address(3),2 ether);
         //buy nft using address 3
-        nft_contract.buy{value:1 ether}(address(3),1);
+        nft_contract.buyBike{value:1 ether}(address(3),1);
         //check if nft is bough and owner is updated
         assertEq(nft_contract.ownerOf(1),address(3));
         //starting interaction as second user
@@ -561,7 +569,7 @@ contract BikeRentTest is Test {
         //giving ethers to address 2 
         vm.deal(address(2),2 ether);
         //buying same nft which is updated and is not for sell
-        nft_contract.buy{value:1 ether}(address(2),1);
+        nft_contract.buyBike{value:1 ether}(address(2),1);
     }
 
     //test for buying with listed for selling
@@ -573,15 +581,17 @@ contract BikeRentTest is Test {
         //expected to be reverted for not list bike for selling
         vm.expectRevert("Bike is not for selling");
         //calling buy on not listed bike
-        nft_contract.buy{value:1 ether}(address(3),1);
+        nft_contract.buyBike{value:1 ether}(address(3),1);
     }
 
     //test for bike listed cannot be transfer
       function testFailsellButcannotbeTransferred() public {
-        //start interaction as owner
+       //start interaction as owner
         vm.startPrank(owner);
-        //listing bike for sell
-        nft_contract.sellBike(user,1000000000000000000,"abc");
+        //minting nft 
+        nft_contract.safeMint(owner,"abc");
+        //list the NFT for renting
+        nft_contract.listForRent(owner,1,400000000000000000);
         //check if owner is owner
         assertEq(nft_contract.ownerOf(1),owner);
         //check if price is correct
@@ -596,26 +606,24 @@ contract BikeRentTest is Test {
 
      //test for bike nft return with sell and return 
     function testrentBikeWithReture_compensationamount()public{
-        //start interaction as owner
-        vm.startPrank(owner);
-        //mint nft for rent
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //list nft for rent
-        nft_contract.listNFT(1);
-        //stop interaction
+         //start minting nft and setting price
+        nft_contract.safeMint(owner,"abc");
+        //listing nft for rent
+        nft_contract.listForRent(owner,1,400000000000000000);
+        //interation stop
         vm.stopPrank();
         //check if nft is listed for rent
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //start interaction as user
         vm.startPrank(user);
         //rent nft as user
-        nft_contract.rentBike(user,1,1692092111);
+        nft_contract.rentaBike(user,1,1692092111);
         //check if nft is rented by the user 
         assertEq(nft_contract.rentedNFT(1),user);
         //check if start time is correct
         assertEq(nft_contract.startTime(user),1692092111);
         //return bike with payment
-        nft_contract.returnBike{value:1 ether}(user,1692094271,1);
+        nft_contract.returnaBike{value:1 ether}(user,1692094271,1);
         //check if owner recieves amount
         assertEq(address(owner).balance,0.5 ether);
         // //check if user balance is decreased and correctly charged
@@ -626,24 +634,24 @@ contract BikeRentTest is Test {
     function testrentBikeWithReture_compensationamount_parttwo()public{
         //start interaction as owner
         vm.startPrank(owner);
-        //mint nft for rent
-        nft_contract.safeMint(owner,"abc",400000000000000000);
-        //list nft for rent
-        nft_contract.listNFT(1);
-        //stop interaction
+        //start minting nft and setting price
+        nft_contract.safeMint(owner,"abc");
+        //listing nft for rent
+        nft_contract.listForRent(owner,1,400000000000000000);
+        //interation stop
         vm.stopPrank();
         //check if nft is listed for rent
-        assertEq(nft_contract.nftListed(1),true);
+        assertEq(nft_contract.nftForRent(1),true);
         //start interaction as user
         vm.startPrank(user);
         //rent nft as user
-        nft_contract.rentBike(user,1,1692096000);
+        nft_contract.rentaBike(user,1,1692096000);
         //check if nft is rented by the user 
         assertEq(nft_contract.rentedNFT(1),user);
         //check if start time is correct
         assertEq(nft_contract.startTime(user),1692096000);
         //return bike with payment
-        nft_contract.returnBike{value:1 ether}(user,1692098400,1);
+        nft_contract.returnaBike{value:1 ether}(user,1692098400,1);
         //check if owner recieves amount
         assertEq(address(owner).balance,0.6 ether);
         // //check if user balance is decreased and correctly charged
