@@ -17,6 +17,14 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     {
     }
 
+    //Events 
+    event Mint(address indexed to,uint256 tokenId,string uri);
+    event onRent(address indexed to,uint256 tokenId, uint256 priceInWei);
+    event onDisplay(address indexed to,uint256 tokenId,uint256 priceInWei);
+    event rentBike(address indexed to,uint256 tokenId,uint256 startTimeValue);
+    event returnBike(address indexed to,uint256 tokenId,uint256 endTime);
+    event boughtBike(address indexed to,uint256 tokenId,uint256 price);
+
     //compensation for five minute charge 0.1 eth
     uint256 public compensationAmount=100000000000000000;
 
@@ -26,15 +34,15 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     //mapping to sell bike
     mapping(uint256=>uint256) public bikePrice;
 
+    //mapping to keep track of rentedbikes
+    mapping (uint256=>address) public rentedNFT;
+    
     //mapping to charge amount for user;
     mapping(address=>uint256) public amountToCharge;
 
     //Mapping to track startingTime for a ride
     mapping(address=>uint256) public startTime;
    
-    //mapping to keep track of rentedbikes
-    mapping (uint256=>address) public rentedNFT;
-
     //Mapping to keep track of Listed Bikes for Rent
     mapping(uint256=>bool) public nftForRent;
 
@@ -43,7 +51,6 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     //Mapping for keeping userride active when rented otherwise false
     mapping(address=>bool) public activeRide;
-
 
      /*
      * @notice Enables to Mint NFT Bikes
@@ -65,6 +72,7 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         _safeMint(to, tokenId);
         //set the URI of the NFT
         _setTokenURI(tokenId, uri);
+        emit Mint(to,tokenId,uri);
     }
 
 
@@ -73,19 +81,20 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * @param tokenId list the specific tokenId.
      * @param priceinwei the chargePrice perthirty minute
      * 
-     * Function can be call by onlyOwner.
+     * Function can be call by anyone.
     */
-    function listForRent(address to,uint256 tokenId,uint256 priceInWei)public {
-        require(to!=address(0),"cannot give zero address");
-        require(tokenId!=0,"TokenId is not available");
-        require(priceInWei!=0,"Price Cannot be zero");
+    function listForRent(address to,uint256 tokenId,uint256 priceInWei)public{
+        require(to!=address(0),"Cannot Give Zero Address");
+        require(tokenId!=0,"TokenId doesnot Exist");
+        require(priceInWei!=0,"Price cannot be zero");
         require(nftForRent[tokenId] == false, "Already listed for rent");
-        require(availableBikes[tokenId]==false,"Selling Bikes cannot be listed on Rent");
+        require(availableBikes[tokenId] == false, "Already listed for selling");
         //check if the sender has the same token ownership
         require(to==ownerOf(tokenId),"You dont have that NFT token!");
         //list nft for the Rent
         nftForRent[tokenId]=true;
         chargeRate[tokenId]=priceInWei;
+        emit onRent(to,tokenId,priceInWei);
     }
 
 
@@ -96,29 +105,71 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * 
      * Function should be perform by onlyOwner.
     */
-    function displayBikeForSale(address to,uint256 tokenId, uint256 priceInWei) public  {
-        require(to!=address(0),"cannot give zero address");
-        require(tokenId!=0,"TokenId is not available");
-        require(priceInWei!=0,"Price Cannot be zero");
-        require(tokenId!=0,"TokenId is not available");
+    function displayBikeForSale(address to,uint256 tokenId, uint256 priceInWei) public {
+        require(to!=address(0),"Cannot Give Zero Address");
+        require(tokenId!=0,"TokenId doesnot Exist");
+        require(priceInWei!=0,"Price cannot be zero");
         require(nftForRent[tokenId] == false, "Already listed for rent");
         require(availableBikes[tokenId]==false,"Cannot Relist to Sell ");
         //check if the sender has the same token ownership
         require(to==ownerOf(tokenId),"You dont have that NFT token!");
-        //list nft for the Rent
-        nftForRent[tokenId]=true;
         bikePrice[tokenId] = priceInWei;
         availableBikes[tokenId] = true;
         // Set approval for the contract to manage all tokens owned by 'to'
         approve(address(this), tokenId);
+        emit onDisplay(to,tokenId,priceInWei);
     }
 
-
-    function updateBikePrice(address to,uint256 tokenId,uint256 priceInWei) public {
-           require(to==ownerOf(tokenId),"You dont have that NFT token!");
-           require(availableBikes[tokenId]==true,"List Bike for Selling First");
-           bikePrice[tokenId]=priceInWei;
+    /*
+     * @notice Enables to remove the nft from renting
+     * @param to address tokenowner 
+     * @param priceinwei price of the nft(bike) in eth(wei).
+     * 
+     * Function should be perform by anyone.
+    */
+     function removefromrented(address to,uint256 tokenId) public {
+        require(to!=address(0),"Cannot Give Zero Address");
+        require(tokenId!=0,"TokenId doesnot Exist");
+        require(nftForRent[tokenId]==true,"List First");
+        //check if the sender has the same token ownership
+        require(to==ownerOf(tokenId),"You dont have that NFT token!");
+        chargeRate[tokenId] = 0;
+        nftForRent[tokenId] = false;   
     }
+
+    /*
+     * @notice Enables to remove the list nft(bike) for selling
+     * @param to address tokenOwner
+     * @param priceinwei price of the nft(bike) in eth(wei).
+     * 
+     * Function should be perform by anyone.
+    */
+    function removefromdisplay(address to,uint256 tokenId) public {
+        require(to!=address(0),"Cannot Give Zero Address");
+        require(tokenId!=0,"TokenId doesnot Exist");
+        require(availableBikes[tokenId]==true,"List First");
+        //check if the sender has the same token ownership
+        require(to==ownerOf(tokenId),"You dont have that NFT token!");
+        bikePrice[tokenId] = 0;
+        availableBikes[tokenId] = false;   
+    }
+
+    /*
+     * @notice Enables to update price for the bike.
+     * @param address to address of the tokenowner
+     * @param tokenId specific tokenId
+     * @param priceInWei price of the token
+     * Function should be perform by anyone.
+    */
+    function updateBikePrice(address to,uint256 tokenId,uint256 priceInWei) public{
+        require(to!=address(0),"Cannot Give Zero Address");
+        require(tokenId!=0,"Cannot update to zero address");
+        require(priceInWei!=0,"Price cannot be zero");
+        require(to==ownerOf(tokenId),"You dont have that NFT token!");
+        require(availableBikes[tokenId]==true,"List Bike for Selling First");
+        bikePrice[tokenId]=priceInWei;
+    }
+
     /*
      * @notice Enables to view compensation amount.
      * 
@@ -150,11 +201,13 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
      * and update owner of nft.
     */
     function buyBike(address to,uint256 tokenId) public payable {
+        require(to!=address(0),"Cannot Give Zero Address");
+        require(tokenId!=0,"TokenID doesnot Exist");
         //check if tokenid is listed for selling
-       require(availableBikes[tokenId]==true,"Bike is not for selling");
+        require(availableBikes[tokenId]==true,"Bike is not for selling");
 
         //check if msg.value is greater than the price of nft
-       require(msg.value>=bikePrice[tokenId],"Low Balance");
+        require(msg.value>=bikePrice[tokenId],"Low Balance");
 
         // Calculate remaining amount after deducting charges
         uint256 remainingAmount = msg.value - bikePrice[tokenId];
@@ -165,36 +218,36 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         //check if amount is send to owner
         require(success, "Failed to send money to owner");
 
+        //Removing from sellingList
+        availableBikes[tokenId]=false;
         //send the NFT
         ERC721(address(this)).transferFrom(ownerOf(tokenId), to, tokenId);
 
+        emit boughtBike(to,tokenId,bikePrice[tokenId]);
+        
         //after payment set price of bike to zero
         bikePrice[tokenId]=0;
-
-        //Removing from sellingList
-        availableBikes[tokenId]=false;
 
         // Refund the remaining amount to the sender
         uint256 refundAmount = remainingAmount;
         
         //sent back the amount to user
-        payable(msg.sender).transfer(refundAmount);
+        payable(msg.sender).transfer(refundAmount);    
     }
 
-   
      /*
      * @notice Enables to change price for renting bikes charges.
      * @param priceinwei to set new price.
      * @param tokenId to get the specific tokenId.
      * 
-     * Function can be call by onlyOwner.
+     * Function can be call by anyone.
     */
-    function changeRentPrice(uint256 priceInWei,uint256 tokenId) public returns (uint256) {
-        require(ownerOf(tokenId)==msg.sender,"You are not the owner of the Bike");
-        // require(percentage >= 0 && percentage <= 100, "Percentage out of range");
-        // Convert the percentage to a decimal value
+    function changeRentPrice(address to,uint256 priceInWei,uint256 tokenId) public returns (uint256) {
+        require(to!=address(0),"Cannot Give Zero Address");
+        require(tokenId!=0,"TokenId doesnot Exist");
+        require(priceInWei!=0,"Price cannot be zero");
+        require(ownerOf(tokenId)==to,"You are not the owner of the Bike");
         uint256 decimalValue = priceInWei;
-        //updating mapping
         chargeRate[tokenId]=decimalValue;
         return decimalValue;
     }
@@ -215,7 +268,7 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         //check for start time is not set to zero
         require(startTimeValue!=0,"Start time cannot be zero");
         //Check If NFT is listed for the Rent
-        require(nftForRent[tokenId]==true,"You cannot rent the bike");
+        require(nftForRent[tokenId]==true,"you cannot rent the bike");
         //check if no one else has rented that nft
         require(rentedNFT[tokenId]==address(0),"You cannot rent this bike already Rented");
         //check if user have other active ride
@@ -228,6 +281,8 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         rentedNFT[tokenId]=walletAddress;
         //charge amount first time when pick
         amountToCharge[walletAddress]=chargeRate[tokenId];
+
+        emit rentBike(walletAddress,tokenId,startTimeValue);
     }
     
      /*
@@ -278,6 +333,8 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         uint256 refundAmount = remainingAmount;
         //sent back the amount to user
         payable(msg.sender).transfer(refundAmount);
+
+        emit returnBike(walletAddress,tokenId,endTime);
     }
 
      /*
@@ -359,7 +416,7 @@ contract Rentabike is  ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
 
-        if (rentedNFT[tokenId] != address(0) && availableBikes[tokenId] == false) {
+        if (nftForRent[tokenId] || availableBikes[tokenId]) {
             require(false, "Transfer not allowed");
         }
     }
